@@ -19,12 +19,12 @@ if row['compiler'] == 'clang14':
     required += ['LTO_CLANG', 'THINLTO'] if row['series'] == '5.4' else ['LTO_CLANG_THIN']
     required += ['CFI_CLANG', 'SHADOW_CALL_STACK']
     if row['series'] in ('5.10', '5.15'):
-        required += ['ARM64_PTR_AUTH', 'ARM64_BTI_KERNEL']
+        required += ['ARM64_PTR_AUTH', 'ARM64_BTI', 'ARM64_BTI_KERNEL']
     if row['series'] == '5.15':
         required += ['ARM64_PTR_AUTH_KERNEL']
 elif row['compiler'] == 'clang18':
     required += ['LTO_CLANG_THIN', 'SHADOW_CALL_STACK', 'ARM64_PTR_AUTH',
-                 'ARM64_PTR_AUTH_KERNEL', 'ARM64_BTI_KERNEL',
+                 'ARM64_PTR_AUTH_KERNEL', 'ARM64_BTI', 'ARM64_BTI_KERNEL',
                  'CFI' if row['series'] == '6.18' else 'CFI_CLANG']
 elif row['compiler'] != 'gcc49':
     raise ValueError('unknown compiler profile')

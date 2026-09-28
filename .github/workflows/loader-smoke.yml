@@ -102,9 +102,10 @@ jobs:
           if [[ "$COMPILER" = gcc49 ]]; then
             git init gcc49
             git -C gcc49 remote add origin https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9
-            git -C gcc49 fetch --depth=1 origin 0a0604336d4d1067aa1aaef8d3779b31fcee841d
+            git -C gcc49 fetch --depth=1 origin 84fb09fafc92a3d9b4d160f049d46c3c784cc941
             git -C gcc49 checkout --detach FETCH_HEAD
-            test "$(git -C gcc49 rev-parse HEAD)" = 0a0604336d4d1067aa1aaef8d3779b31fcee841d
+            test "$(git -C gcc49 rev-parse HEAD)" = 84fb09fafc92a3d9b4d160f049d46c3c784cc941
+            test -x gcc49/bin/aarch64-linux-android-gcc
             git -C gcc49 show -s --format=fuller HEAD > out/gcc-source.txt
           fi
       - name: Build full symbol versions and the ordinary module

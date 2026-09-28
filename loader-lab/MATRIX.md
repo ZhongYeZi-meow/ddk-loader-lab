@@ -18,9 +18,11 @@ nor fabricated CRCs substitute for a complete source build.
 ## Toolchain families
 
 * 4.x: AOSP GCC 4.9 pinned to commit
-  `0a0604336d4d1067aa1aaef8d3779b31fcee841d`, with an explicit **no-CFI** profile.
+  `84fb09fafc92a3d9b4d160f049d46c3c784cc941` (android10-release), with an explicit **no-CFI** profile.
   This is a separate compiler ABI class, not evidence of compatibility with
   a strict CFI target. `HOSTCFLAGS=-O2 -fcommon` handles old host build tools.
+  The newer android12L branch retains binutils but no GCC executable and is
+  therefore not used as a C compiler.
 * 5.x: the existing digest-pinned public DDK Clang 14 image; fresh source only,
   with legacy Clang CFI and ThinLTO enabled. 5.4 uses `LTO_CLANG`/`THINLTO`;
   5.10/5.15 use `LTO_CLANG_THIN`.
