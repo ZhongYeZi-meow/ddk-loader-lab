@@ -38,6 +38,9 @@ nor fabricated CRCs substitute for a complete source build.
   directly rather than REAL_CC. It executes the unchanged `gcc-4.9.x` ELF binary;
   `gcc-4.9` is only a symlink back to the banner wrapper in this prebuilt.
   The community SM8250 tree explicitly needs COMPAT for compat_uptr_t.
+  MiCode dipper explicitly uses NR_CPUS=8 because its load-balance tracepoint
+  rejects counts above 32; NX659J explicitly needs SCHED_WALT because its
+  scheduler accesses the corresponding runqueue statistics unconditionally.
 * 5.x: the existing digest-pinned public DDK Clang 14 image; fresh source only,
   with legacy Clang CFI and ThinLTO enabled. 5.4 uses `LTO_CLANG`/`THINLTO`;
   5.10/5.15 use `LTO_CLANG_THIN`.

@@ -37,6 +37,9 @@ if row['series'] == '6.12':
     required += ['BLOCK']
 if row['id'] == 'jack-oneplus-sm8250':
     required += ['COMPAT']
+if row['id'] == 'redmagic-nx659j':
+    required += ['SCHED_WALT']
+required_values = {'NR_CPUS': '8'} if row['id'] == 'xiaomi-dipper' else {}
 disabled = ['LOCALVERSION_AUTO', 'TRIM_UNUSED_KSYMS', 'CFI_PERMISSIVE',
             'CFI_CLANG_PERMISSIVE', 'WERROR', 'KSU', 'SUSFS', 'KPM', 'RUST']
 if row['compiler'] in ('gcc49', 'gcc12'):
@@ -44,8 +47,9 @@ if row['compiler'] in ('gcc49', 'gcc12'):
 fragment = '\n'.join('CONFIG_' + x + '=y' for x in required)
 fragment += '\nCONFIG_DEBUG_INFO_DWARF4=y\nCONFIG_LOCALVERSION="-kh-matrix"\n'
 fragment += '\n'.join('# CONFIG_' + x + ' is not set' for x in disabled) + '\n'
+fragment += ''.join('CONFIG_' + key + '=' + value + '\n' for key, value in required_values.items())
 (root / 'out/requested.config').write_text(fragment)
-profile = dict(row, required=required, disabled=disabled,
+profile = dict(row, required=required, disabled=disabled, required_values=required_values,
                config_scope='independent compile-only; not vendor stock',
                expected_cfi='none' if row['compiler'] in ('gcc49', 'gcc12') else
                             'legacy-clang-cfi' if row['compiler'] == 'clang14' else 'kcfi',
