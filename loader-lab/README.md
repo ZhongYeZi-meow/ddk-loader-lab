@@ -15,7 +15,11 @@ public `android13-5.15` DDK image pinned by digest, with its original Kbuild
 configuration and compiler. The upstream DDK image comments out two normal
 `modpost` export-resolution statements; this workflow restores those statements
 and rebuilds that host tool in an ephemeral container before compiling. The
-restoration log and host-tool hash are retained. Kernel configuration and
+restoration log, original/rebuilt/used host-tool hashes and actual host compiler
+command are retained. The three host-tool translation units are compiled
+explicitly with the prepared target headers; a successful no-op `make scripts`
+is not accepted as rebuild evidence. The audit also compares every emitted CRC
+against the image's `Module.symvers`. Kernel configuration and
 module source are not changed by that step. The module is not binary-patched, stripped of
 versions, or built with overridden CFI/signature/force-load settings.
 

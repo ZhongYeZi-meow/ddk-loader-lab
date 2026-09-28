@@ -14,7 +14,7 @@ def require(condition, message):
         raise ValueError(message)
 
 
-def inspect(path):
+def inspect(path, symvers_path=None):
     data = path.read_bytes()
     with path.open('rb') as stream:
         elf = ELFFile(stream)
@@ -43,6 +43,17 @@ def inspect(path):
                          and s['st_info']['bind'] != 'STB_WEAK')
         missing = sorted(set(imports) - set(crcs))
         require(not missing, 'missing versions for imports: ' + ', '.join(missing))
+        if symvers_path is not None:
+            expected = {}
+            for line in symvers_path.read_text().splitlines():
+                fields = line.split()
+                require(len(fields) >= 4, 'invalid Module.symvers record')
+                value = f'0x{int(fields[0], 16):08x}'
+                require(fields[1] not in expected or expected[fields[1]] == value,
+                        'conflicting Module.symvers CRC: ' + fields[1])
+                expected[fields[1]] = value
+            for name, value in crcs.items():
+                require(expected.get(name) == value, 'DDK CRC mismatch: ' + name)
         tm = elf.get_section_by_name('.gnu.linkonce.this_module')
         require(tm is not None, 'missing this_module')
         relocs = []
@@ -66,12 +77,13 @@ def inspect(path):
                 'source_commit': os.environ.get('GITHUB_SHA'),
                 'workflow_run': os.environ.get('GITHUB_RUN_ID'),
                 'ddk_image': os.environ.get('DDK_IMAGE'),
+                'ddk_crc_comparison': 'passed' if symvers_path is not None else 'not_run',
                 'build_audit': 'passed', 'device_load_test': 'not_run'}
 
 
 if __name__ == '__main__':
     path = Path(sys.argv[1])
-    report = inspect(path)
+    report = inspect(path, Path(sys.argv[2]) if len(sys.argv) > 2 else None)
     (path.parent / 'audit.json').write_text(json.dumps(report, indent=2) + '\n', encoding='utf8')
     (path.parent / 'SHA256SUMS').write_text(report['sha256'] + '  ' + path.name + '\n', encoding='ascii')
     print(json.dumps(report, indent=2))
