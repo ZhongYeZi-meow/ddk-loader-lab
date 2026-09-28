@@ -11,7 +11,14 @@ unset KDIR KBUILD_MODPOST_WARN KBUILD_EXTRA_SYMBOLS
 python3 loader-lab/ci/configure-matrix.py "$MATRIX_ID"
 args=(-C "$SRC" O="$BUILD")
 if [[ "$COMPILER" = gcc49 ]]; then
-  export PATH="/work/gcc49/bin:$PATH"
+  # Old Kbuild probes call CROSS_COMPILE gcc directly, outside REAL_CC.
+  # Keep the vendor kernel warning wrapper; select the real prebuilt compiler
+  # for those probes without its unrelated Android deprecation banner.
+  mkdir -p /work/compiler-bin
+  printf '%s\n' '#!/bin/sh' 'exec /work/gcc49/bin/aarch64-linux-android-gcc-4.9 "$@"' \
+    > /work/compiler-bin/aarch64-linux-android-gcc
+  chmod 755 /work/compiler-bin/aarch64-linux-android-gcc
+  export PATH="/work/compiler-bin:/work/gcc49/bin:$PATH"
   args+=(CROSS_COMPILE=aarch64-linux-android- HOSTCC=gcc 'HOSTCFLAGS=-O2 -fcommon'
          'KBUILD_HOSTCFLAGS=-O2 -fcommon' PYTHON=python2 REAL_CC=aarch64-linux-android-gcc-4.9)
   aarch64-linux-android-gcc-4.9 --version > out/compiler.txt

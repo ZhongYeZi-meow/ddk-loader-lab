@@ -34,6 +34,8 @@ nor fabricated CRCs substitute for a complete source build.
   exists only in the runner build container.
   Vendor kernel warning wrappers call the actual GCC 4.9 executable via REAL_CC,
   avoiding a prebuilt deprecation banner contaminating old cc-option probes.
+  A local compiler launcher also handles probes which call CROSS_COMPILE gcc
+  directly rather than REAL_CC. It executes the unchanged prebuilt binary.
   The community SM8250 tree explicitly needs COMPAT for compat_uptr_t.
 * 5.x: the existing digest-pinned public DDK Clang 14 image; fresh source only,
   with legacy Clang CFI and ThinLTO enabled. 5.4 uses `LTO_CLANG`/`THINLTO`;
