@@ -6,7 +6,7 @@
     "commit": "f9b8314c64640cd10c7b14ce9d2a11a0dc02a941",
     "version": "4.9.337",
     "series": "4.9",
-    "compiler": "gcc49",
+    "compiler": "gcc12",
     "group": "common"
   },
   {
@@ -16,7 +16,7 @@
     "commit": "ef7460eabd6dc0cf87ee5ead6fd0d0b6c8c288f2",
     "version": "4.14.307",
     "series": "4.14",
-    "compiler": "gcc49",
+    "compiler": "gcc12",
     "group": "common"
   },
   {
@@ -26,7 +26,7 @@
     "commit": "12d190ed22fbc3ac4b9b19b9305f26d530769fc8",
     "version": "4.19.275",
     "series": "4.19",
-    "compiler": "gcc49",
+    "compiler": "gcc12",
     "group": "common"
   },
   {
@@ -116,7 +116,7 @@
     "commit": "78f23d960166a577303a725e44a6edbac9e008a0",
     "version": "4.19.325",
     "series": "4.19",
-    "compiler": "gcc49",
+    "compiler": "gcc12",
     "group": "vendor"
   },
   {

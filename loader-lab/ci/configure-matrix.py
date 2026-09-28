@@ -26,7 +26,7 @@ elif row['compiler'] == 'clang18':
     required += ['LTO_CLANG_THIN', 'SHADOW_CALL_STACK', 'ARM64_PTR_AUTH',
                  'ARM64_PTR_AUTH_KERNEL', 'ARM64_BTI', 'ARM64_BTI_KERNEL',
                  'CFI' if row['series'] == '6.18' else 'CFI_CLANG']
-elif row['compiler'] != 'gcc49':
+elif row['compiler'] not in ('gcc49', 'gcc12'):
     raise ValueError('unknown compiler profile')
 if row['series'] in ('6.12', '6.18'):
     # These trees expose the version record format separately from MODVERSIONS.
@@ -37,7 +37,7 @@ if row['series'] == '6.12':
     required += ['BLOCK']
 disabled = ['LOCALVERSION_AUTO', 'TRIM_UNUSED_KSYMS', 'CFI_PERMISSIVE',
             'CFI_CLANG_PERMISSIVE', 'WERROR', 'KSU', 'SUSFS', 'KPM', 'RUST']
-if row['compiler'] == 'gcc49':
+if row['compiler'] in ('gcc49', 'gcc12'):
     disabled += ['CFI', 'CFI_CLANG', 'LTO_CLANG', 'SHADOW_CALL_STACK']
 fragment = '\n'.join('CONFIG_' + x + '=y' for x in required)
 fragment += '\nCONFIG_DEBUG_INFO_DWARF4=y\nCONFIG_LOCALVERSION="-kh-matrix"\n'
@@ -45,7 +45,7 @@ fragment += '\n'.join('# CONFIG_' + x + ' is not set' for x in disabled) + '\n'
 (root / 'out/requested.config').write_text(fragment)
 profile = dict(row, required=required, disabled=disabled,
                config_scope='independent compile-only; not vendor stock',
-               expected_cfi='none' if row['compiler'] == 'gcc49' else
+               expected_cfi='none' if row['compiler'] in ('gcc49', 'gcc12') else
                             'legacy-clang-cfi' if row['compiler'] == 'clang14' else 'kcfi',
                device_load_test='not_run')
 (root / 'out/matrix-profile.json').write_text(json.dumps(profile, indent=2) + '\n')

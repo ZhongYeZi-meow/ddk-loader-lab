@@ -48,7 +48,7 @@ jobs:
           rows = json.load(open('loader-lab/ci/matrix-sources.json'))
           group = os.environ['MODE'].removeprefix('matrix-')
           rows = [r for r in rows if group == 'all' or r['group'] == group
-                  or (group == 'gcc' and r['compiler'] == 'gcc49')
+                  or (group == 'gcc' and r['compiler'].startswith('gcc'))
                   or (group == 'modern' and r['series'] in ('6.12', '6.18'))]
           source = os.environ['SOURCE_ID']
           if source:

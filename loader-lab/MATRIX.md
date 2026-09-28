@@ -27,6 +27,11 @@ nor fabricated CRCs substitute for a complete source build.
   therefore not used as a C compiler.
   Its retained compiler wrapper uses `/usr/bin/python`; the build environment
   supplies Python 3 for that Python-3-compatible wrapper.
+  Later stable 4.9/4.14/4.19 and the community 4.19.325 tree require GCC >=5.1;
+  those rows instead select the recorded GCC 12 cross package, with no-CFI
+  unchanged. Old vendor kernel warning wrappers retain their checks and run
+  under Python 2.7 from a separate digest-pinned image stage. This interpreter
+  exists only in the runner build container.
 * 5.x: the existing digest-pinned public DDK Clang 14 image; fresh source only,
   with legacy Clang CFI and ThinLTO enabled. 5.4 uses `LTO_CLANG`/`THINLTO`;
   5.10/5.15 use `LTO_CLANG_THIN`.

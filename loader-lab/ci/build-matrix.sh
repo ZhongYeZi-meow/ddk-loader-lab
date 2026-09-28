@@ -12,10 +12,17 @@ python3 loader-lab/ci/configure-matrix.py "$MATRIX_ID"
 args=(-C "$SRC" O="$BUILD")
 if [[ "$COMPILER" = gcc49 ]]; then
   export PATH="/work/gcc49/bin:$PATH"
-  args+=(CROSS_COMPILE=aarch64-linux-android- HOSTCC=gcc 'HOSTCFLAGS=-O2 -fcommon')
+  args+=(CROSS_COMPILE=aarch64-linux-android- HOSTCC=gcc 'HOSTCFLAGS=-O2 -fcommon'
+         'KBUILD_HOSTCFLAGS=-O2 -fcommon' PYTHON=python2)
   aarch64-linux-android-gcc --version > out/compiler.txt
   aarch64-linux-android-ld --version > out/linker.txt
   sha256sum /work/gcc49/bin/aarch64-linux-android-gcc > out/compiler.sha256
+elif [[ "$COMPILER" = gcc12 ]]; then
+  args+=(CROSS_COMPILE=aarch64-linux-gnu- CC=aarch64-linux-gnu-gcc-12 HOSTCC=gcc
+         'HOSTCFLAGS=-O2 -fcommon' 'KBUILD_HOSTCFLAGS=-O2 -fcommon' PYTHON=python2)
+  aarch64-linux-gnu-gcc-12 --version > out/compiler.txt
+  aarch64-linux-gnu-ld --version > out/linker.txt
+  sha256sum "$(command -v aarch64-linux-gnu-gcc-12)" > out/compiler.sha256
 else
   args+=(LLVM=1 LLVM_IAS=1)
   clang --version > out/compiler.txt
