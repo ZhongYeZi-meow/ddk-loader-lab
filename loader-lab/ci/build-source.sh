@@ -27,6 +27,9 @@ make -s -C "$SRC" O="$BUILD" kernelrelease > out/kernel-release.txt
 # A complete vmlinux link generates authoritative versions through standard
 # genksyms/modpost. modules_prepare alone is not used as a substitute.
 make -C "$SRC" O="$BUILD" -j2 V=0 vmlinux 2>&1 | tee out/kernel-build.log
+# Linux 5.15 emits vmlinux.symvers first; the modules target aggregates it
+# into Module.symvers and prepares the external-module linker script.
+make -C "$SRC" O="$BUILD" -j2 V=0 modules 2>&1 | tee out/kernel-modules.log
 test -s "$BUILD/Module.symvers"
 cp "$BUILD/Module.symvers" out/kernel.Module.symvers
 sha256sum "$BUILD/scripts/mod/modpost" > out/modpost-used.sha256
