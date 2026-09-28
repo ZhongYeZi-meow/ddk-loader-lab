@@ -3,12 +3,13 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: Build the original DDK fixture or a fresh Android 5.15.149 source fixture
+        description: Build the DDK fixture or a fresh Android 5.15.149 / 5.10.209 source fixture
         type: choice
         default: ddk
         options:
           - ddk
           - source-5.15.149
+          - source-5.10.209
 
 permissions:
   contents: read
@@ -69,23 +70,24 @@ jobs:
           retention-days: 14
 
   source-build:
-    if: inputs.mode == 'source-5.15.149'
+    if: inputs.mode == 'source-5.15.149' || inputs.mode == 'source-5.10.209'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     env:
       DDK_IMAGE: ghcr.io/ylarod/ddk@sha256:5359ffd6ac64caebacd46955777bef32fd461b0f3b61b7d380e9847eb1c5e961
-      KERNEL_SOURCE_COMMIT: 5d96939590c0122be2138255c921e57e3f78b7bd
+      KERNEL_SOURCE_COMMIT: ${{ inputs.mode == 'source-5.10.209' && 'dd976ecce2ce969d698599c84c8e7dcbb07c9aaf' || '5d96939590c0122be2138255c921e57e3f78b7bd' }}
+      SOURCE_SERIES: ${{ inputs.mode == 'source-5.10.209' && '5.10.209' || '5.15.149' }}
     steps:
       - name: Checkout public build workspace
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
           submodules: false
-      - name: Checkout public Android 5.15.149 source
+      - name: Checkout pinned public Android source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: aosp-mirror/kernel_common
-          ref: 5d96939590c0122be2138255c921e57e3f78b7bd # android13-5.15.149_r00
+          ref: ${{ env.KERNEL_SOURCE_COMMIT }}
           path: source-kernel
           persist-credentials: false
           submodules: false
@@ -102,6 +104,7 @@ jobs:
       - name: Build fresh kernel symbol versions and ordinary smoke module
         run: |
           docker run --rm --platform linux/amd64 --network none \
+            --env SOURCE_SERIES="$SOURCE_SERIES" \
             --user "$(id -u):$(id -g)" --cap-drop ALL --security-opt no-new-privileges \
             --mount type=bind,source="$GITHUB_WORKSPACE",target=/work \
             --workdir /work "$DDK_IMAGE" bash /work/loader-lab/ci/build-source.sh
@@ -113,7 +116,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: kh-loader-smoke-source-5.15.149-${{ github.run_id }}
+          name: kh-loader-smoke-${{ inputs.mode }}-${{ github.run_id }}
           path: out/
           if-no-files-found: error
           retention-days: 14

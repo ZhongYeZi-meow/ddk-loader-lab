@@ -65,3 +65,14 @@ the DDK Module.symvers into this source build and never rewrites module CRCs.
 Compiler DWARF layouts, full resolved config, build logs and kernel symbol
 versions accompany the artifact. Any ABI differences must be measured after
 the build; no device identity, reference driver or device result is included.
+
+## Fresh Android 5.10.209 source fixture
+
+Select `source-5.10.209` in the same workflow to compile the unchanged module
+against public tag android13-5.10.209_r00 at immutable kernel commit
+dd976ecce2ce969d698599c84c8e7dcbb07c9aaf. This is a separate source-derived
+fixture, not a rewritten 5.15 artifact. It uses its own minimal fragment and
+fresh vmlinux/modules symbol versions. 5.10 exposes ARM64_PTR_AUTH rather
+than the later ARM64_PTR_AUTH_KERNEL option; CFI strict, SCS and BTI_KERNEL
+are asserted after Kconfig resolution. Build results do not imply a successful
+cross-series device load. No device experiment is performed or published here.
