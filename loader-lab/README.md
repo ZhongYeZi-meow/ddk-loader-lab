@@ -12,7 +12,11 @@ local workspaces. No device-side execution is performed by this repository.
 
 Run **Build loader smoke module** in GitHub Actions. The workflow uses the
 public `android13-5.15` DDK image pinned by digest, with its original Kbuild
-configuration and compiler. The module is not binary-patched, stripped of
+configuration and compiler. The upstream DDK image comments out two normal
+`modpost` export-resolution statements; this workflow restores those statements
+and rebuilds that host tool in an ephemeral container before compiling. The
+restoration log and host-tool hash are retained. Kernel configuration and
+module source are not changed by that step. The module is not binary-patched, stripped of
 versions, or built with overridden CFI/signature/force-load settings.
 
 Artifacts include the `.ko`, generated `.mod.c`, compiler identity, kernel

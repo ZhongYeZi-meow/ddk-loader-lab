@@ -30,12 +30,22 @@ jobs:
           mkdir -p out
           docker pull --platform linux/amd64 "$DDK_IMAGE"
           docker image inspect "$DDK_IMAGE" > out/ddk-image.json
+      - name: Restore standard modpost export and version checking
+        run: |
+          docker run --rm --platform linux/amd64 --network none \
+            --user 0 --cap-drop ALL --cap-add DAC_OVERRIDE --security-opt no-new-privileges \
+            --mount type=bind,source="$GITHUB_WORKSPACE/loader-lab/ci",target=/ci,readonly \
+            "$DDK_IMAGE" bash /ci/restore-modpost.sh \
+            > out/modpost 2> out/modpost-rebuild.log
+          chmod 755 out/modpost
+          sha256sum out/modpost > out/modpost.sha256
       - name: Compile with the original kernel checks enabled
         run: |
           docker run --rm --platform linux/amd64 --network none \
             --user "$(id -u):$(id -g)" \
             --cap-drop ALL --security-opt no-new-privileges \
             --mount type=bind,source="$GITHUB_WORKSPACE",target=/work \
+            --mount type=bind,source="$GITHUB_WORKSPACE/out/modpost",target=/opt/ddk/kdir/android13-5.15/scripts/mod/modpost,readonly \
             --workdir /work "$DDK_IMAGE" bash /work/loader-lab/ci/build.sh
       - name: Audit ELF and symbol version coverage
         run: |
