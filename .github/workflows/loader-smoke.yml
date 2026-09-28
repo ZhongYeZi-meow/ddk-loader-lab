@@ -3,13 +3,20 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: Build the DDK fixture or a fresh Android 5.15.149 / 5.10.209 source fixture
+        description: Build DDK, a pinned source fixture, or the 4.9-6.18 source matrix
         type: choice
         default: ddk
         options:
           - ddk
           - source-5.15.149
           - source-5.10.209
+          - matrix-all
+          - matrix-common
+          - matrix-vendor
+      source_id:
+        description: Optional exact matrix source id (empty selects the mode group)
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -19,6 +26,107 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  matrix-plan:
+    if: startsWith(inputs.mode, 'matrix-')
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          submodules: false
+      - id: plan
+        env:
+          MODE: ${{ inputs.mode }}
+          SOURCE_ID: ${{ inputs.source_id }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          rows = json.load(open('loader-lab/ci/matrix-sources.json'))
+          group = os.environ['MODE'].removeprefix('matrix-')
+          rows = [r for r in rows if group == 'all' or r['group'] == group]
+          source = os.environ['SOURCE_ID']
+          if source:
+              rows = [r for r in rows if r['id'] == source]
+          assert rows, 'no pinned source matches this selection'
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
+              out.write('matrix=' + json.dumps({'include': rows}, separators=(',', ':')) + '\n')
+          PY
+
+  matrix-build:
+    needs: matrix-plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix: ${{ fromJSON(needs.matrix-plan.outputs.matrix) }}
+    name: matrix / ${{ matrix.id }}
+    env:
+      DDK_IMAGE: ghcr.io/ylarod/ddk@sha256:5359ffd6ac64caebacd46955777bef32fd461b0f3b61b7d380e9847eb1c5e961
+      MATRIX_ID: ${{ matrix.id }}
+      COMPILER: ${{ matrix.compiler }}
+      KERNEL_SOURCE_COMMIT: ${{ matrix.commit }}
+    steps:
+      - name: Checkout public compilation workspace
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          submodules: false
+      - name: Checkout pinned public source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: ${{ matrix.repository }}
+          ref: ${{ matrix.commit }}
+          path: source-kernel
+          persist-credentials: false
+          submodules: false
+          fetch-depth: 1
+      - name: Prepare compiler and record provenance
+        run: |
+          mkdir -p out
+          test "$(git -C source-kernel rev-parse HEAD)" = "$KERNEL_SOURCE_COMMIT"
+          git -C source-kernel show -s --format=fuller HEAD > out/kernel-source.txt
+          python3 -m venv "$RUNNER_TEMP/audit-venv"
+          "$RUNNER_TEMP/audit-venv/bin/pip" install pyelftools==0.32
+          if [[ "$COMPILER" = clang14 ]]; then
+            docker pull --platform linux/amd64 "$DDK_IMAGE"
+            echo "BUILD_IMAGE=$DDK_IMAGE" >> "$GITHUB_ENV"
+            docker image inspect "$DDK_IMAGE" > out/build-image.json
+          else
+            docker build --platform linux/amd64 -f loader-lab/ci/matrix.Dockerfile -t kh-matrix-build loader-lab/ci
+            echo 'BUILD_IMAGE=kh-matrix-build' >> "$GITHUB_ENV"
+            docker image inspect kh-matrix-build > out/build-image.json
+          fi
+          if [[ "$COMPILER" = gcc49 ]]; then
+            git init gcc49
+            git -C gcc49 remote add origin https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9
+            git -C gcc49 fetch --depth=1 origin 0a0604336d4d1067aa1aaef8d3779b31fcee841d
+            git -C gcc49 checkout --detach FETCH_HEAD
+            test "$(git -C gcc49 rev-parse HEAD)" = 0a0604336d4d1067aa1aaef8d3779b31fcee841d
+            git -C gcc49 show -s --format=fuller HEAD > out/gcc-source.txt
+          fi
+      - name: Build full symbol versions and the ordinary module
+        run: |
+          docker run --rm --platform linux/amd64 --network none \
+            --env MATRIX_ID --env COMPILER \
+            --user "$(id -u):$(id -g)" --cap-drop ALL --security-opt no-new-privileges \
+            --mount type=bind,source="$GITHUB_WORKSPACE",target=/work \
+            --workdir /work "$BUILD_IMAGE" bash /work/loader-lab/ci/build-matrix.sh
+      - name: Audit original Kbuild output
+        run: |
+          "$RUNNER_TEMP/audit-venv/bin/python" loader-lab/ci/audit.py out/kh_loader_smoke.ko out/kernel.Module.symvers
+          "$RUNNER_TEMP/audit-venv/bin/python" loader-lab/ci/source-layouts.py out/kh_loader_smoke.ko
+      - name: Upload artifacts or independent failure evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: kh-matrix-${{ matrix.id }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: out/
+          if-no-files-found: error
+          retention-days: 14
+
   build:
     if: inputs.mode == 'ddk' || inputs.mode == ''
     runs-on: ubuntu-24.04

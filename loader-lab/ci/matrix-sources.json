@@ -1,0 +1,152 @@
+[
+  {
+    "id": "common-4.9",
+    "repository": "aosp-mirror/kernel_common",
+    "ref": "deprecated/android-4.9-q",
+    "commit": "f9b8314c64640cd10c7b14ce9d2a11a0dc02a941",
+    "version": "4.9.337",
+    "series": "4.9",
+    "compiler": "gcc49",
+    "group": "common"
+  },
+  {
+    "id": "common-4.14",
+    "repository": "aosp-mirror/kernel_common",
+    "ref": "deprecated/android-4.14-q",
+    "commit": "ef7460eabd6dc0cf87ee5ead6fd0d0b6c8c288f2",
+    "version": "4.14.307",
+    "series": "4.14",
+    "compiler": "gcc49",
+    "group": "common"
+  },
+  {
+    "id": "common-4.19",
+    "repository": "aosp-mirror/kernel_common",
+    "ref": "deprecated/android-4.19-q",
+    "commit": "12d190ed22fbc3ac4b9b19b9305f26d530769fc8",
+    "version": "4.19.275",
+    "series": "4.19",
+    "compiler": "gcc49",
+    "group": "common"
+  },
+  {
+    "id": "common-5.4",
+    "repository": "aosp-mirror/kernel_common",
+    "ref": "android12-5.4",
+    "commit": "b2957a0ebc3b9949475a442f9e8ab64ccaa6e087",
+    "version": "5.4.300",
+    "series": "5.4",
+    "compiler": "clang14",
+    "group": "common"
+  },
+  {
+    "id": "common-5.10",
+    "repository": "aosp-mirror/kernel_common",
+    "ref": "android13-5.10.209_r00",
+    "commit": "dd976ecce2ce969d698599c84c8e7dcbb07c9aaf",
+    "version": "5.10.209",
+    "series": "5.10",
+    "compiler": "clang14",
+    "group": "common"
+  },
+  {
+    "id": "common-5.15",
+    "repository": "aosp-mirror/kernel_common",
+    "ref": "android13-5.15.149_r00",
+    "commit": "5d96939590c0122be2138255c921e57e3f78b7bd",
+    "version": "5.15.149",
+    "series": "5.15",
+    "compiler": "clang14",
+    "group": "common"
+  },
+  {
+    "id": "common-6.1",
+    "repository": "aosp-mirror/kernel_common",
+    "ref": "android14-6.1",
+    "commit": "498f91c17b0822a09aede17d26a63bf8c6813725",
+    "version": "6.1.155",
+    "series": "6.1",
+    "compiler": "clang18",
+    "group": "common"
+  },
+  {
+    "id": "common-6.6",
+    "repository": "aosp-mirror/kernel_common",
+    "ref": "android15-6.6",
+    "commit": "e148935a1d484f8a9a0742acbb22ca966f8067df",
+    "version": "6.6.111",
+    "series": "6.6",
+    "compiler": "clang18",
+    "group": "common"
+  },
+  {
+    "id": "common-6.12",
+    "repository": "aosp-mirror/kernel_common",
+    "ref": "android16-6.12",
+    "commit": "105b5745f1d771060aa9fb7f75821f69bb2298fd",
+    "version": "6.12.52",
+    "series": "6.12",
+    "compiler": "clang18",
+    "group": "common"
+  },
+  {
+    "id": "common-6.18",
+    "repository": "aosp-mirror/kernel_common",
+    "ref": "android17-6.18",
+    "commit": "1afe39edbe66c201d26f23f2e3396583238f6842",
+    "version": "6.18.0",
+    "series": "6.18",
+    "compiler": "clang18",
+    "group": "common"
+  },
+  {
+    "id": "xiaomi-dipper",
+    "repository": "MiCode/Xiaomi_Kernel_OpenSource",
+    "ref": "dipper-o-oss",
+    "commit": "ab0b51d6d7573a0b1bcabca0e42939284ebd47b7",
+    "version": "4.9.65",
+    "series": "4.9",
+    "compiler": "gcc49",
+    "group": "vendor"
+  },
+  {
+    "id": "jack-oneplus-sm8250",
+    "repository": "JackA1ltman/android_kernel_oneplus_sm8250_los_noksu",
+    "ref": "upstream-latest",
+    "commit": "78f23d960166a577303a725e44a6edbac9e008a0",
+    "version": "4.19.325",
+    "series": "4.19",
+    "compiler": "gcc49",
+    "group": "vendor"
+  },
+  {
+    "id": "oneplus-sm8250",
+    "repository": "OnePlusOSS/android_kernel_oneplus_sm8250",
+    "ref": "oneplus/SM8250_Q_10.0",
+    "commit": "cad09e061ef6cf689a4a1e54d27562e0f042236a",
+    "version": "4.19.81",
+    "series": "4.19",
+    "compiler": "gcc49",
+    "group": "vendor"
+  },
+  {
+    "id": "redmagic-nx659j",
+    "repository": "ztemt/NX659J_Q_kernel",
+    "ref": "master",
+    "commit": "6384c171bcca6dc0f01324a50ef8b77748f71cad",
+    "version": "4.19.81",
+    "series": "4.19",
+    "compiler": "gcc49",
+    "group": "vendor"
+  },
+  {
+    "id": "oppo-sm8350",
+    "repository": "oppo-source/android_kernel_oppo_sm8350",
+    "ref": "oppo/sm8350_s_12.1_find_x3_pro",
+    "commit": "5cf625dd5932c6560d845080ecc9365b3098a864",
+    "version": "5.4.147",
+    "series": "5.4",
+    "compiler": "clang14",
+    "group": "vendor"
+  }
+]

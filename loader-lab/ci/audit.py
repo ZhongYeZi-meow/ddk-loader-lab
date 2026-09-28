@@ -14,6 +14,41 @@ def require(condition, message):
         raise ValueError(message)
 
 
+def version_records(basic=None, ext_crcs=None, ext_names=None):
+    crcs = {}
+    formats = []
+    if basic is not None:
+        require(basic and len(basic) % 64 == 0, 'invalid basic modversion size')
+        formats.append('basic')
+        for crc, name in struct.iter_unpack('<Q56s', basic):
+            require(b'\0' in name, 'unterminated version name')
+            name = name.split(b'\0', 1)[0].decode()
+            require(name and name not in crcs and crc <= 0xffffffff,
+                    'empty, duplicate, or invalid basic version')
+            crcs[name] = f'0x{crc:08x}'
+    if ext_crcs is not None or ext_names is not None:
+        require(ext_crcs is not None and ext_names is not None,
+                'incomplete extended version sections')
+        require(ext_crcs and len(ext_crcs) % 4 == 0, 'invalid extended CRC size')
+        formats.append('extended')
+        pos = 0
+        seen = set()
+        for (crc,) in struct.iter_unpack('<I', ext_crcs):
+            end = ext_names.find(b'\0', pos)
+            require(end > pos, 'missing or empty extended version name')
+            name = ext_names[pos:end].decode()
+            pos = end + 1
+            require(name not in seen, 'duplicate extended version')
+            seen.add(name)
+            value = f'0x{crc:08x}'
+            require(name not in crcs or crcs[name] == value, 'basic/extended CRC conflict')
+            crcs[name] = value
+        # Kbuild emits a C string literal: a final implicit NUL may follow.
+        require(ext_names[pos:] in (b'', b'\0'), 'trailing extended names')
+    require(crcs, 'empty or missing symbol versions')
+    return crcs, formats
+
+
 def inspect(path, symvers_path=None):
     data = path.read_bytes()
     with path.open('rb') as stream:
@@ -27,15 +62,10 @@ def inspect(path, symvers_path=None):
                 meta.setdefault(key.decode(), []).append(value.decode())
         require(meta.get('name') == ['kh_loader_smoke'], 'unexpected module name')
         require(meta.get('license') == ['GPL'], 'unexpected module license')
-        section = elf.get_section_by_name('__versions')
-        require(section is not None and section['sh_size'] > 0, 'empty or missing __versions')
-        require(section['sh_size'] % 64 == 0, 'invalid basic modversion record size')
-        crcs = {}
-        for crc, name in struct.iter_unpack('<Q56s', section.data()):
-            require(b'\0' in name, 'unterminated version name')
-            name = name.split(b'\0', 1)[0].decode()
-            require(name and name not in crcs, 'empty or duplicate version name')
-            crcs[name] = f'0x{crc & 0xffffffff:08x}'
+        version_sections = [elf.get_section_by_name(name) for name in
+                            ('__versions', '__version_ext_crcs', '__version_ext_names')]
+        crcs, formats = version_records(*(s.data() if s is not None else None
+                                         for s in version_sections))
         require('module_layout' in crcs, 'missing module_layout version')
         symbols = elf.get_section_by_name('.symtab')
         imports = sorted(s.name for s in symbols.iter_symbols()
@@ -73,6 +103,12 @@ def inspect(path, symvers_path=None):
         return {'schema_version': 1, 'module': path.name,
                 'sha256': hashlib.sha256(data).hexdigest(), 'bytes': len(data),
                 'modinfo': meta, 'imports': imports, 'crcs': crcs,
+                'version_formats': formats,
+                'sections': [{'name': s.name, 'size': s['sh_size'], 'type': s['sh_type'],
+                              'flags': s['sh_flags'], 'alignment': s['sh_addralign']}
+                             for s in elf.iter_sections()],
+                'instrumentation_symbols': sorted(s.name for s in symbols.iter_symbols()
+                    if any(x in s.name for x in ('__cfi', '__kcfi', '.cfi_jt', '__ubsan'))),
                 'this_module_size': tm['sh_size'], 'this_module_relocations': relocs,
                 'source_commit': os.environ.get('GITHUB_SHA'),
                 'workflow_run': os.environ.get('GITHUB_RUN_ID'),
