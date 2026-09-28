@@ -1,7 +1,8 @@
 # Pinned ordinary KO compilation matrix
 
 Use **Build loader smoke module**, mode `matrix-all`, `matrix-common`, or
-`matrix-vendor`. An optional exact `source_id` selects one manifest entry for
+`matrix-vendor` (or `matrix-gcc` to retry just the old compiler family).
+An optional exact `source_id` selects one manifest entry for
 an independent diagnostic run. Original DDK and 5.10/5.15 modes remain available.
 
 `ci/matrix-sources.json` fixes public repository commits and versions read from
@@ -23,6 +24,8 @@ nor fabricated CRCs substitute for a complete source build.
   a strict CFI target. `HOSTCFLAGS=-O2 -fcommon` handles old host build tools.
   The newer android12L branch retains binutils but no GCC executable and is
   therefore not used as a C compiler.
+  Its retained compiler wrapper uses `/usr/bin/python`; the build environment
+  supplies Python 3 for that Python-3-compatible wrapper.
 * 5.x: the existing digest-pinned public DDK Clang 14 image; fresh source only,
   with legacy Clang CFI and ThinLTO enabled. 5.4 uses `LTO_CLANG`/`THINLTO`;
   5.10/5.15 use `LTO_CLANG_THIN`.

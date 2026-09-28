@@ -13,6 +13,7 @@ on:
           - matrix-all
           - matrix-common
           - matrix-vendor
+          - matrix-gcc
       source_id:
         description: Optional exact matrix source id (empty selects the mode group)
         type: string
@@ -45,7 +46,8 @@ jobs:
           import json, os
           rows = json.load(open('loader-lab/ci/matrix-sources.json'))
           group = os.environ['MODE'].removeprefix('matrix-')
-          rows = [r for r in rows if group == 'all' or r['group'] == group]
+          rows = [r for r in rows if group == 'all' or r['group'] == group
+                  or (group == 'gcc' and r['compiler'] == 'gcc49')]
           source = os.environ['SOURCE_ID']
           if source:
               rows = [r for r in rows if r['id'] == source]
