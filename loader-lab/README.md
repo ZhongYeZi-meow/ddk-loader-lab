@@ -49,3 +49,19 @@ automatically from CI; this workflow only compiles and inspects it.
 
 The first target is ARM64 android13-5.15. Additional targets should be added
 with their own image digests and retained build/audit evidence.
+
+## Fresh Android 5.15.149 source fixture
+
+The same workflow has an explicit `source-5.15.149` mode. It checks out the
+public aosp-mirror/kernel_common tag android13-5.15.149_r00 at immutable commit
+5d96939590c0122be2138255c921e57e3f78b7bd and uses the pinned image only as a
+compiler/runtime. A fresh independent minimal compilation configuration keeps
+MODVERSIONS, unload, CFI, SCS, BTI and PAC enabled while omitting unrelated
+tracing/BPF features. This is not a device boot configuration.
+
+The workflow builds vmlinux to generate fresh standard genksyms/modpost symbol
+versions, then compiles the unchanged ordinary smoke module. It never copies
+the DDK Module.symvers into this source build and never rewrites module CRCs.
+Compiler DWARF layouts, full resolved config, build logs and kernel symbol
+versions accompany the artifact. Any ABI differences must be measured after
+the build; no device identity, reference driver or device result is included.

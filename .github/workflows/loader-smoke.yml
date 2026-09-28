@@ -1,6 +1,14 @@
 name: Build loader smoke module
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: Build the original DDK fixture or a fresh Android 5.15.149 source fixture
+        type: choice
+        default: ddk
+        options:
+          - ddk
+          - source-5.15.149
 
 permissions:
   contents: read
@@ -11,6 +19,7 @@ concurrency:
 
 jobs:
   build:
+    if: inputs.mode == 'ddk' || inputs.mode == ''
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
@@ -55,6 +64,56 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: kh-loader-smoke-android13-5.15-${{ github.run_id }}
+          path: out/
+          if-no-files-found: error
+          retention-days: 14
+
+  source-build:
+    if: inputs.mode == 'source-5.15.149'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      DDK_IMAGE: ghcr.io/ylarod/ddk@sha256:5359ffd6ac64caebacd46955777bef32fd461b0f3b61b7d380e9847eb1c5e961
+      KERNEL_SOURCE_COMMIT: 5d96939590c0122be2138255c921e57e3f78b7bd
+    steps:
+      - name: Checkout public build workspace
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          submodules: false
+      - name: Checkout public Android 5.15.149 source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: aosp-mirror/kernel_common
+          ref: 5d96939590c0122be2138255c921e57e3f78b7bd # android13-5.15.149_r00
+          path: source-kernel
+          persist-credentials: false
+          submodules: false
+          fetch-depth: 1
+      - name: Record source and install artifact auditor
+        run: |
+          mkdir -p out
+          test "$(git -C source-kernel rev-parse HEAD)" = "$KERNEL_SOURCE_COMMIT"
+          git -C source-kernel show -s --format=fuller HEAD > out/kernel-source.txt
+          python3 -m venv "$RUNNER_TEMP/audit-venv"
+          "$RUNNER_TEMP/audit-venv/bin/pip" install pyelftools==0.32
+          docker pull --platform linux/amd64 "$DDK_IMAGE"
+          docker image inspect "$DDK_IMAGE" > out/ddk-image.json
+      - name: Build fresh kernel symbol versions and ordinary smoke module
+        run: |
+          docker run --rm --platform linux/amd64 --network none \
+            --user "$(id -u):$(id -g)" --cap-drop ALL --security-opt no-new-privileges \
+            --mount type=bind,source="$GITHUB_WORKSPACE",target=/work \
+            --workdir /work "$DDK_IMAGE" bash /work/loader-lab/ci/build-source.sh
+      - name: Audit source-built module
+        run: |
+          "$RUNNER_TEMP/audit-venv/bin/python" loader-lab/ci/audit.py out/kh_loader_smoke.ko out/kernel.Module.symvers
+          "$RUNNER_TEMP/audit-venv/bin/python" loader-lab/ci/source-layouts.py out/kh_loader_smoke.ko
+      - name: Upload source-build evidence only
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: kh-loader-smoke-source-5.15.149-${{ github.run_id }}
           path: out/
           if-no-files-found: error
           retention-days: 14
