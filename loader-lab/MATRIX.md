@@ -62,6 +62,11 @@ its available logs independently.
 
 ## Evidence
 
+For the Android branch comparison, select source_id `common-5.15-a14` in
+`matrix-common`. This pins the peeled commit for `android14-5.15.149_r00`;
+`common-5.15` remains the Android 13 counterpart. Both use the same independent
+compile-only Clang 14 profile, not a reproduction of their stock GKI builds.
+
 Artifacts contain source identity, requested and resolved configs, compiler and
 linker versions, full build logs, freshly generated Module.symvers, module SHA256,
 ELF/relocation/disassembly data, basic/extended symbol-version audit, and DWARF

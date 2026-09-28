@@ -60,6 +60,16 @@
     "group": "common"
   },
   {
+    "id": "common-5.15-a14",
+    "repository": "aosp-mirror/kernel_common",
+    "ref": "android14-5.15.149_r00",
+    "commit": "8e3ef77857531c04babbc72c9a065d6060fff844",
+    "version": "5.15.149",
+    "series": "5.15",
+    "compiler": "clang14",
+    "group": "common"
+  },
+  {
     "id": "common-6.1",
     "repository": "aosp-mirror/kernel_common",
     "ref": "android14-6.1",
