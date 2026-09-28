@@ -28,6 +28,13 @@ elif row['compiler'] == 'clang18':
                  'CFI' if row['series'] == '6.18' else 'CFI_CLANG']
 elif row['compiler'] != 'gcc49':
     raise ValueError('unknown compiler profile')
+if row['series'] in ('6.12', '6.18'):
+    # These trees expose the version record format separately from MODVERSIONS.
+    required += ['GENKSYMS', 'BASIC_MODVERSIONS', 'EXTENDED_MODVERSIONS']
+if row['series'] == '6.12':
+    # This Android tree includes blkdev.h from init/main.c even with BLOCK=n;
+    # its rq_list definition needs the block layer. Keep the dependency real.
+    required += ['BLOCK']
 disabled = ['LOCALVERSION_AUTO', 'TRIM_UNUSED_KSYMS', 'CFI_PERMISSIVE',
             'CFI_CLANG_PERMISSIVE', 'WERROR', 'KSU', 'SUSFS', 'KPM', 'RUST']
 if row['compiler'] == 'gcc49':

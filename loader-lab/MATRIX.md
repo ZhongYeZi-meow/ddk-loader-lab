@@ -1,7 +1,8 @@
 # Pinned ordinary KO compilation matrix
 
 Use **Build loader smoke module**, mode `matrix-all`, `matrix-common`, or
-`matrix-vendor` (or `matrix-gcc` to retry just the old compiler family).
+`matrix-vendor` (or `matrix-gcc` to retry just the old compiler family and
+`matrix-modern` for 6.12/6.18).
 An optional exact `source_id` selects one manifest entry for
 an independent diagnostic run. Original DDK and 5.10/5.15 modes remain available.
 
@@ -34,6 +35,10 @@ nor fabricated CRCs substitute for a complete source build.
   repositories remain mutable, so this is not a byte-reproducible package lock.
   KCFI and ThinLTO are enabled. 6.18 uses `CONFIG_CFI`, replacing the older
   `CONFIG_CFI_CLANG` selection.
+  6.12/6.18 explicitly request GENKSYMS and both basic/extended version records;
+  MODVERSIONS alone under allnoconfig does not select those record formats.
+  The selected 6.12 Android tree additionally needs BLOCK enabled for the
+  rq_list definition included by init/main.c.
 
 Configuration assertions fail if requested features disappear. Source compilation
 runs without network, capabilities, or persisted checkout credentials. Images
