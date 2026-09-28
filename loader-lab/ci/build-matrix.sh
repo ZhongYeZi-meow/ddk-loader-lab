@@ -15,15 +15,15 @@ if [[ "$COMPILER" = gcc49 ]]; then
   # Keep the vendor kernel warning wrapper; select the real prebuilt compiler
   # for those probes without its unrelated Android deprecation banner.
   mkdir -p /work/compiler-bin
-  printf '%s\n' '#!/bin/sh' 'exec /work/gcc49/bin/aarch64-linux-android-gcc-4.9 "$@"' \
+  printf '%s\n' '#!/bin/sh' 'exec /work/gcc49/bin/aarch64-linux-android-gcc-4.9.x "$@"' \
     > /work/compiler-bin/aarch64-linux-android-gcc
   chmod 755 /work/compiler-bin/aarch64-linux-android-gcc
   export PATH="/work/compiler-bin:/work/gcc49/bin:$PATH"
   args+=(CROSS_COMPILE=aarch64-linux-android- HOSTCC=gcc 'HOSTCFLAGS=-O2 -fcommon'
-         'KBUILD_HOSTCFLAGS=-O2 -fcommon' PYTHON=python2 REAL_CC=aarch64-linux-android-gcc-4.9)
-  aarch64-linux-android-gcc-4.9 --version > out/compiler.txt
+         'KBUILD_HOSTCFLAGS=-O2 -fcommon' PYTHON=python2 REAL_CC=aarch64-linux-android-gcc-4.9.x)
+  aarch64-linux-android-gcc-4.9.x --version > out/compiler.txt
   aarch64-linux-android-ld --version > out/linker.txt
-  sha256sum /work/gcc49/bin/aarch64-linux-android-gcc-4.9 > out/compiler.sha256
+  sha256sum /work/gcc49/bin/aarch64-linux-android-gcc-4.9.x > out/compiler.sha256
 elif [[ "$COMPILER" = gcc12 ]]; then
   args+=(CROSS_COMPILE=aarch64-linux-gnu- CC=aarch64-linux-gnu-gcc-12 HOSTCC=gcc
          'HOSTCFLAGS=-O2 -fcommon' 'KBUILD_HOSTCFLAGS=-O2 -fcommon' PYTHON=python2)
