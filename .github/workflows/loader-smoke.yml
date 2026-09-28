@@ -1,0 +1,49 @@
+name: Build loader smoke module
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: loader-smoke-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      DDK_IMAGE: ghcr.io/ylarod/ddk@sha256:5359ffd6ac64caebacd46955777bef32fd461b0f3b61b7d380e9847eb1c5e961
+    steps:
+      - name: Checkout public fork
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          submodules: false
+      - name: Install artifact auditor
+        run: |
+          python3 -m venv "$RUNNER_TEMP/audit-venv"
+          "$RUNNER_TEMP/audit-venv/bin/pip" install pyelftools==0.32
+      - name: Pull pinned public DDK image
+        run: |
+          mkdir -p out
+          docker pull --platform linux/amd64 "$DDK_IMAGE"
+          docker image inspect "$DDK_IMAGE" > out/ddk-image.json
+      - name: Compile with the original kernel checks enabled
+        run: |
+          docker run --rm --platform linux/amd64 --network none \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --mount type=bind,source="$GITHUB_WORKSPACE",target=/work \
+            --workdir /work "$DDK_IMAGE" bash /work/loader-lab/ci/build.sh
+      - name: Audit ELF and symbol version coverage
+        run: |
+          "$RUNNER_TEMP/audit-venv/bin/python" loader-lab/ci/audit.py out/kh_loader_smoke.ko
+      - name: Upload module and build evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: kh-loader-smoke-android13-5.15-${{ github.run_id }}
+          path: out/
+          if-no-files-found: error
+          retention-days: 14
