@@ -13,10 +13,10 @@ args=(-C "$SRC" O="$BUILD")
 if [[ "$COMPILER" = gcc49 ]]; then
   export PATH="/work/gcc49/bin:$PATH"
   args+=(CROSS_COMPILE=aarch64-linux-android- HOSTCC=gcc 'HOSTCFLAGS=-O2 -fcommon'
-         'KBUILD_HOSTCFLAGS=-O2 -fcommon' PYTHON=python2)
-  aarch64-linux-android-gcc --version > out/compiler.txt
+         'KBUILD_HOSTCFLAGS=-O2 -fcommon' PYTHON=python2 REAL_CC=aarch64-linux-android-gcc-4.9)
+  aarch64-linux-android-gcc-4.9 --version > out/compiler.txt
   aarch64-linux-android-ld --version > out/linker.txt
-  sha256sum /work/gcc49/bin/aarch64-linux-android-gcc > out/compiler.sha256
+  sha256sum /work/gcc49/bin/aarch64-linux-android-gcc-4.9 > out/compiler.sha256
 elif [[ "$COMPILER" = gcc12 ]]; then
   args+=(CROSS_COMPILE=aarch64-linux-gnu- CC=aarch64-linux-gnu-gcc-12 HOSTCC=gcc
          'HOSTCFLAGS=-O2 -fcommon' 'KBUILD_HOSTCFLAGS=-O2 -fcommon' PYTHON=python2)

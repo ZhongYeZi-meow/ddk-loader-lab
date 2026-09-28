@@ -60,7 +60,34 @@ def inspect(path, symvers_path=None):
             key, sep, value = item.partition(b'=')
             if sep:
                 meta.setdefault(key.decode(), []).append(value.decode())
-        require(meta.get('name') == ['kh_loader_smoke'], 'unexpected module name')
+        module_name = meta.get('name')
+        name_source = 'modinfo'
+        if module_name is None:
+            # Older standard modpost initializes only __this_module.name.
+            # Use compiler DWARF to locate that member, not an assumed offset.
+            tm_name = elf.get_section_by_name('.gnu.linkonce.this_module')
+            require(tm_name is not None and elf.has_dwarf_info(), 'missing legacy name evidence')
+            offsets = set()
+            for cu in elf.get_dwarf_info().iter_CUs():
+                for die in cu.iter_DIEs():
+                    attrs = die.attributes
+                    if die.tag != 'DW_TAG_structure_type' or attrs.get('DW_AT_name') is None or attrs['DW_AT_name'].value != b'module':
+                        continue
+                    if attrs.get('DW_AT_byte_size') is None or attrs['DW_AT_byte_size'].value != tm_name['sh_size']:
+                        continue
+                    for member in die.iter_children():
+                        name = member.attributes.get('DW_AT_name')
+                        loc = member.attributes.get('DW_AT_data_member_location')
+                        if member.tag == 'DW_TAG_member' and name and name.value == b'name' and loc and isinstance(loc.value, int):
+                            offsets.add(loc.value)
+            require(len(offsets) == 1, 'ambiguous legacy module name location')
+            off = offsets.pop()
+            require(off >= 0 and off + 56 <= tm_name['sh_size'], 'legacy name outside module')
+            raw_name = tm_name.data()[off:off+56]
+            require(b'\0' in raw_name, 'unterminated legacy name')
+            module_name = [raw_name.split(b'\0', 1)[0].decode()]
+            name_source = 'this_module + compiler DWARF'
+        require(module_name == ['kh_loader_smoke'], 'unexpected module name')
         require(meta.get('license') == ['GPL'], 'unexpected module license')
         version_sections = [elf.get_section_by_name(name) for name in
                             ('__versions', '__version_ext_crcs', '__version_ext_names')]
@@ -103,6 +130,7 @@ def inspect(path, symvers_path=None):
         return {'schema_version': 1, 'module': path.name,
                 'sha256': hashlib.sha256(data).hexdigest(), 'bytes': len(data),
                 'modinfo': meta, 'imports': imports, 'crcs': crcs,
+                'module_name': module_name[0], 'module_name_source': name_source,
                 'version_formats': formats,
                 'sections': [{'name': s.name, 'size': s['sh_size'], 'type': s['sh_type'],
                               'flags': s['sh_flags'], 'alignment': s['sh_addralign']}

@@ -35,6 +35,8 @@ if row['series'] == '6.12':
     # This Android tree includes blkdev.h from init/main.c even with BLOCK=n;
     # its rq_list definition needs the block layer. Keep the dependency real.
     required += ['BLOCK']
+if row['id'] == 'jack-oneplus-sm8250':
+    required += ['COMPAT']
 disabled = ['LOCALVERSION_AUTO', 'TRIM_UNUSED_KSYMS', 'CFI_PERMISSIVE',
             'CFI_CLANG_PERMISSIVE', 'WERROR', 'KSU', 'SUSFS', 'KPM', 'RUST']
 if row['compiler'] in ('gcc49', 'gcc12'):

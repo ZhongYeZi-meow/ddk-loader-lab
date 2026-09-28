@@ -16,7 +16,7 @@ on:
           - matrix-gcc
           - matrix-modern
       source_id:
-        description: Optional exact matrix source id (empty selects the mode group)
+        description: Optional comma-separated exact source ids (empty selects the mode group)
         type: string
         default: ''
 
@@ -52,7 +52,9 @@ jobs:
                   or (group == 'modern' and r['series'] in ('6.12', '6.18'))]
           source = os.environ['SOURCE_ID']
           if source:
-              rows = [r for r in rows if r['id'] == source]
+              selected = source.split(',')
+              assert len(selected) == len(set(selected)) and set(selected) <= {r['id'] for r in rows}
+              rows = [r for r in rows if r['id'] in selected]
           assert rows, 'no pinned source matches this selection'
           with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
               out.write('matrix=' + json.dumps({'include': rows}, separators=(',', ':')) + '\n')

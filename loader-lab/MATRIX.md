@@ -3,7 +3,7 @@
 Use **Build loader smoke module**, mode `matrix-all`, `matrix-common`, or
 `matrix-vendor` (or `matrix-gcc` to retry just the old compiler family and
 `matrix-modern` for 6.12/6.18).
-An optional exact `source_id` selects one manifest entry for
+Optional comma-separated exact `source_id` values select manifest entries for
 an independent diagnostic run. Original DDK and 5.10/5.15 modes remain available.
 
 `ci/matrix-sources.json` fixes public repository commits and versions read from
@@ -32,6 +32,9 @@ nor fabricated CRCs substitute for a complete source build.
   unchanged. Old vendor kernel warning wrappers retain their checks and run
   under Python 2.7 from a separate digest-pinned image stage. This interpreter
   exists only in the runner build container.
+  Vendor kernel warning wrappers call the actual GCC 4.9 executable via REAL_CC,
+  avoiding a prebuilt deprecation banner contaminating old cc-option probes.
+  The community SM8250 tree explicitly needs COMPAT for compat_uptr_t.
 * 5.x: the existing digest-pinned public DDK Clang 14 image; fresh source only,
   with legacy Clang CFI and ThinLTO enabled. 5.4 uses `LTO_CLANG`/`THINLTO`;
   5.10/5.15 use `LTO_CLANG_THIN`.
@@ -58,6 +61,10 @@ linker versions, full build logs, freshly generated Module.symvers, module SHA25
 ELF/relocation/disassembly data, basic/extended symbol-version audit, and DWARF
 module/parameter layouts. `device_load_test=not_run` is deliberate: this repository
 does compilation and artifact inspection only.
+Old 4.9 modpost omits the modinfo name key; the auditor verifies the name from
+this_module using its DWARF member location instead. No metadata is fabricated.
+The 6.18 source pin currently produces a **6.18.0-rc6** release string, not a
+final 6.18 release; all artifacts retain the complete actual release.
 
 Build organization was studied read-only from JackA1ltman's
 `NonGKI_Kernel_Build_2nd` (`19c0215d4bc0b23392ab11ea1645547bbf93fbf4`),
